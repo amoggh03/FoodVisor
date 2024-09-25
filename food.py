@@ -8,7 +8,7 @@ import openai
 app = Flask(__name__)
 
 # Set your OpenAI API key
-openai.api_key = "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"
+openai.api_key = "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"
 
 # Directory to save images
 SAVE_DIR = "IMAGES"  # Use a relative path
