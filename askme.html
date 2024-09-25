@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Med Bot</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+        }
+        .container h1 {
+            font-size: 4em;
+            margin-bottom: 10px;
+            margin-top: 20px;
+            transition: margin-top 0.5s;
+        }
+        .container h2 {
+            font-size: 2em;
+            margin-top: 0;
+            color: #666;
+        }
+        .messages {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        .message {
+            margin: 10px 0;
+        }
+        .assistant {
+            background: linear-gradient(to right, #00f, #0f0, #f00, #0ff, #f0f, #ff0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .camera-icon {
+            cursor: pointer;
+            font-size: 1.5em;
+            margin-left: 10px;
+            color: #fff;
+        }
+        .chat-box {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            gap: 10px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .chat-box input {
+            flex: 1;
+            padding: 15px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 15px;
+            outline: none;
+            color: #fff;
+            font-size: 1em;
+        }
+        .chat-box button {
+            width: 50px;
+            background: none;
+            border: 1px solid #333;
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .slider-container {
+            margin-top: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .slider {
+            width: 200px;
+            margin-bottom: 10px;
+        }
+        .slider-label {
+            margin-right: 10px;
+            display: inline-block;
+            width: 80px;
+            text-align: right;
+        }
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .submit-button {
+            padding: 10px 20px;
+            background-color: #333;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .submit-button:hover {
+            background-color: #555;
+        }
+        img {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+    </style>
+    <script>
+        let uploadedImage = null;
+
+        async function sendMessage() {
+            const question = document.getElementById('question').value;
+            if (question.trim() === "") return;
+
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.style.display = 'block';
+
+            const greeting = document.getElementById('greeting');
+            greeting.style.marginTop = '10px'; // Move the greeting up
+
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message';
+            userMessage.textContent = `You: ${question}`;
+            messagesDiv.appendChild(userMessage);
+
+            // Display streaming effect for the assistant's reply
+            const botMessage = document.createElement('div');
+            botMessage.className = 'message assistant';
+            botMessage.textContent = 'Assistant: ';
+            messagesDiv.appendChild(botMessage);
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: question })
+            });
+            const data = await response.json();
+
+            // Streaming effect
+            let reply = data.reply;
+            let index = 0;
+            function typeEffect() {
+                if (index < reply.length) {
+                    botMessage.textContent += reply[index];
+                    index++;
+                    setTimeout(typeEffect, 50); // Adjust typing speed here
+                }
+            }
+            typeEffect();
+
+            document.getElementById('question').value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function loadPicker() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = handleImageUpload;
+            input.click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                uploadedImage = e.target.result;
+
+                const container = document.querySelector('.container');
+                const existingImg = container.querySelector('img');
+                if (existingImg) {
+                    container.replaceChild(img, existingImg);
+                } else {
+                    container.insertBefore(img, container.children[2]); // Insert the image after the greeting
+                }
+
+                const sliderContainer = document.getElementById('slider-container');
+                sliderContainer.style.display = 'flex'; // Show the slider container
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateImage() {
+            const brightness = document.getElementById('brightnessSlider').value;
+            const contrast = document.getElementById('contrastSlider').value;
+
+            const img = document.querySelector('.container img');
+            if (img) {
+                img.style.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+            }
+        }
+
+        function saveImage() {
+            let x, y; // Declare variables outside the blocks
+
+            const canvas = document.createElement('canvas');
+            const img = document.querySelector('.container img');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.filter = img.style.filter;
+            ctx.drawImage(img, 0, 0);
+            const imageSrc = canvas.toDataURL('image/jpeg');
+
+            fetch('/saveImage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ imageSrc: imageSrc })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Image saved successfully!');
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
+                    // Remove the uploaded image from the container
+                    const container = document.querySelector('.container');
+                    const img = container.querySelector('img');
+                    if (img) {
+                        container.removeChild(img);
+                    }
+                } else {
+                    alert('Error saving image: ' + data.error);
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
+                }
+                // Use x and y variables as needed
+                console.log(`Product name: ${x}, Quantity: ${y}`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to save image. Please try again.');
+            });
+        }
+
+        function ingredients() {
+            let x, y; // Declare variables outside the blocks
+
+            const canvas = document.createElement('canvas');
+            const img = document.querySelector('.container img');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.filter = img.style.filter;
+            ctx.drawImage(img, 0, 0);
+            const ingredients = canvas.toDataURL('image/jpeg');
+
+            fetch('/ingredients', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ingredients: ingredients })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Image saved successfully!');
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
+                } else {
+                    alert('Error saving image: ' + data.error);
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
+                }
+                // Use x and y variables as needed
+                console.log(`Product name: ${x}, Quantity: ${y}`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to save image. Please try again.');
+            });
+        }
+
+    </script>
+</head>
+<body>
+<divclass=“container”>
+    
+    <h1 id="greeting">Hello, I'm your personal food advisor- "<span style="color: #a5e813;">FoodVisor</span>" </h1>
+    <h2>How can I help you today?</h2>
+    <div class="messages" id="messages"></div>
+</div>
+<div class="chat-box">
+    <input type="text" id="question" placeholder="Ask your question..">
+    <button onclick="sendMessage()">💬</button>
+    <span class="camera-icon" onclick="loadPicker()">📷</span>
+</div>
+</body>
+</html>
