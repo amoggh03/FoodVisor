@@ -223,4 +223,5 @@ def update_personal_details():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))  # Get the PORT environment variable or default to 5000
+    app.run(host='0.0.0.0', port=port, debug=True)  # Bind to 0.0.0.0 for Render to access
