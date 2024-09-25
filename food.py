@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 import os
 import base64
 from PIL import Image
@@ -9,9 +9,10 @@ app = Flask(__name__)
 
 # Set your OpenAI API key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
+
 # Directory to save images
-SAVE_DIR = "IMAGES"  # Use a relative path
-os.makedirs(SAVE_DIR, exist_ok=True)  # Create the directory if it doesn't exist
+SAVE_DIR = "IMAGES"
+os.makedirs(SAVE_DIR, exist_ok=True)
 
 # Predefined medical and allergy information
 predefined_allergies = "nil"
@@ -39,9 +40,10 @@ messages = [
     }
 ]
 
+# Serve index.html from the same directory
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return send_file('index.html')
 
 @app.route('/saveImage', methods=['POST'])
 def save_image():
@@ -84,24 +86,19 @@ def save_image():
 @app.route('/ingredients', methods=['POST'])
 def ingredients():
     try:
-        # Get ingredients from the request
         ingredients = request.json.get('ingredients')
         print("Ingredients:", ingredients)
 
-        # Save ingredients as a text file
         directory = os.path.join(SAVE_DIR, 'ingredients.txt')
         with open(directory, 'w') as f:
             f.write(ingredients)
 
-        # Extract text from the saved file
         extracted_text = extract_text_from_text_file(directory)
         print("\nExtracted Text:", extracted_text)
 
-        # Handle medical info extraction from saved medical report images
         medical_info = extract_medical_info(extracted_text)
         print("\nMedical Info:", medical_info)
 
-        # Add predefined medical and allergy information to the extracted text
         combined_text = (
             f"Predefined allergies: {predefined_allergies}. "
             f"Predefined medical conditions: {predefined_medical_conditions}. "
@@ -111,7 +108,6 @@ def ingredients():
         )
         print("\nCombined Text:", combined_text)
 
-        # Send combined text to GPT for analysis
         ingredient_analysis = analyze_ingredients(combined_text)
         print("\nIngredient Analysis:", ingredient_analysis)
 
@@ -132,7 +128,6 @@ def chat():
     try:
         user_message = request.json.get('message')
 
-        # Construct the prompt with predefined medical information and user message
         combined_text = (
             f"Predefined allergies: {predefined_allergies}. "
             f"Predefined medical conditions: {predefined_medical_conditions}. "
@@ -145,10 +140,8 @@ def chat():
         print("\nUser Message:", user_message)
         print("\nCombined Text Sent to GPT:", combined_text)
 
-        # Adding user message to messages history
         messages.append({"role": "user", "content": user_message})
 
-        # Chat completion request
         chat_completion = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
@@ -160,7 +153,6 @@ def chat():
             ]
         )
 
-        # Extract the assistant's reply
         assistant_reply = chat_completion.choices[0].message['content']
         messages.append({"role": "assistant", "content": assistant_reply})
 
@@ -177,7 +169,6 @@ def extract_text_from_image(image_path):
     return extracted_text
 
 def extract_medical_info(combined_text):
-    # Placeholder for extracting medical information
     return "Simulated medical info from combined text."
 
 @app.route('/saveCombinedText', methods=['POST'])
@@ -187,16 +178,13 @@ def save_combined_text():
     try:
         data = request.json
 
-        # Extract and update personal details
         personal_details = data.get('personalDetails', {})
         weight = personal_details.get('weight', '')
         age = personal_details.get('age', '')
         height = personal_details.get('height', '')
 
-        # Update the global personalDetails variable
         personalDetails = f"Weight: {weight} kg, Age: {age} years, Height: {height} cm"
 
-        # Extract and update allergy and medical info
         extractedText1 = data.get('allergyInput', '')
         extractedText2 = data.get('medicalInfoInput', '')
 
@@ -217,7 +205,7 @@ def get_input():
 
 @app.route('/askme')
 def askme():
-    return render_template('askme.html')
+    return send_file('askme.html')
 
 @app.route('/updatePersonalDetails', methods=['POST'])
 def update_personal_details():
@@ -235,4 +223,4 @@ def update_personal_details():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)  # Ensure this is set to False in production
+    app.run(debug=True)
