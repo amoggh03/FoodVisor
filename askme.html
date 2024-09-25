@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,6 +135,9 @@
             const messagesDiv = document.getElementById('messages');
             messagesDiv.style.display = 'block';
 
+            const greeting = document.getElementById('greeting');
+            greeting.style.marginTop = '10px'; // Move the greeting up
+
             const userMessage = document.createElement('div');
             userMessage.className = 'message';
             userMessage.textContent = `You: ${question}`;
@@ -145,7 +149,7 @@
             botMessage.textContent = 'Assistant: ';
             messagesDiv.appendChild(botMessage);
 
-            const response = await fetch('https://your-server-url/chat', { // Replace with your server URL
+            const response = await fetch('/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -195,6 +199,9 @@
                 } else {
                     container.insertBefore(img, container.children[2]); // Insert the image after the greeting
                 }
+
+                const sliderContainer = document.getElementById('slider-container');
+                sliderContainer.style.display = 'flex'; // Show the slider container
             };
             reader.readAsDataURL(file);
         }
@@ -210,6 +217,8 @@
         }
 
         function saveImage() {
+            let x, y; // Declare variables outside the blocks
+
             const canvas = document.createElement('canvas');
             const img = document.querySelector('.container img');
             canvas.width = img.width;
@@ -219,7 +228,7 @@
             ctx.drawImage(img, 0, 0);
             const imageSrc = canvas.toDataURL('image/jpeg');
 
-            fetch('https://your-server-url/saveImage', { // Replace with your server URL
+            fetch('/saveImage', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -230,12 +239,21 @@
             .then(data => {
                 if (data.success) {
                     alert('Image saved successfully!');
-                    const x = prompt("Enter the product name:");
-                    const y = prompt("Enter the quantity of the product:");
-                    console.log(`Product name: ${x}, Quantity: ${y}`);
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
+                    // Remove the uploaded image from the container
+                    const container = document.querySelector('.container');
+                    const img = container.querySelector('img');
+                    if (img) {
+                        container.removeChild(img);
+                    }
                 } else {
                     alert('Error saving image: ' + data.error);
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
                 }
+                // Use x and y variables as needed
+                console.log(`Product name: ${x}, Quantity: ${y}`);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -244,6 +262,8 @@
         }
 
         function ingredients() {
+            let x, y; // Declare variables outside the blocks
+
             const canvas = document.createElement('canvas');
             const img = document.querySelector('.container img');
             canvas.width = img.width;
@@ -253,7 +273,7 @@
             ctx.drawImage(img, 0, 0);
             const ingredients = canvas.toDataURL('image/jpeg');
 
-            fetch('https://your-server-url/ingredients', { // Replace with your server URL
+            fetch('/ingredients', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -263,45 +283,36 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Ingredients processed successfully!');
-                    const x = prompt("Enter the product name:");
-                    const y = prompt("Enter the quantity of the product:");
-                    console.log(`Product name: ${x}, Quantity: ${y}`);
+                    alert('Image saved successfully!');
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
                 } else {
-                    alert('Error processing ingredients: ' + data.error);
+                    alert('Error saving image: ' + data.error);
+                    x = prompt("Enter the product name:");
+                    y = prompt("Enter the quantity of the product:");
                 }
+                // Use x and y variables as needed
+                console.log(`Product name: ${x}, Quantity: ${y}`);
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to process ingredients. Please try again.');
+                alert('Failed to save image. Please try again.');
             });
         }
 
     </script>
 </head>
 <body>
-<div class="container">
+<divclass=“container”>
+    
     <h1 id="greeting">Hello, I'm your personal food advisor- "<span style="color: #a5e813;">FoodVisor</span>" </h1>
     <h2>How can I help you today?</h2>
-    <div class="messages" id="messages" style="display:none;"></div>
+    <div class="messages" id="messages"></div>
 </div>
 <div class="chat-box">
     <input type="text" id="question" placeholder="Ask your question..">
-    <button     <button onclick="sendMessage()">💬</button>
+    <button onclick="sendMessage()">💬</button>
     <span class="camera-icon" onclick="loadPicker()">📷</span>
-</div>
-<div id="slider-container" class="slider-container">
-    <div class="slider-wrapper">
-        <label class="slider-label">Brightness:</label>
-        <input type="range" class="slider" id="brightnessSlider" min="0" max="200" value="100" onchange="updateImage()">
-    </div>
-    <div class="slider-wrapper">
-        <label class="slider-label">Contrast:</label>
-        <input type="range" class="slider" id="contrastSlider" min="0" max="200" value="100" onchange="updateImage()">
-    </div>
-    <button class="submit-button" onclick="saveImage()">Save Image</button>
-    <button class="submit-button" onclick="ingredients()">Process Ingredients</button>
 </div>
 </body>
 </html>
-
