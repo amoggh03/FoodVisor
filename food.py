@@ -8,7 +8,7 @@ import openai
 app = Flask(__name__)
 
 # Set your OpenAI API key
-openai.api_key = "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"
+openai.api_key = "sk-proj-9TK371BiKL7WHbOVQprFaUVWuOSKJrhcRu-r7dSQR1uixux26KFn-UPQD9wspYT6nNlkz8gx0iT3BlbkFJvUp1shpSEld_rEFGGMFY8QjZqMNVKAlVE08sgZayTmCJNwtmpJ76N3539ZH_atgpTjFXAXXC4Aa"
 
 # Directory to save images
 SAVE_DIR = "/Users/amoggha03/Desktop/College/HACKS/FoodHealthBot/IMAGES"
@@ -160,7 +160,7 @@ def chat():
 
         # Chat completion request
         chat_completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": (
                     "You are a medical assistant with knowledge about allergies, dietary restrictions, and serious health conditions. "
